@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "237503344790",
+    "project_id": "pershot-app",
+    "storage_bucket": "pershot-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:237503344790:android:c358941f09e858f92812b7",
+        "android_client_info": {
+          "package_name": "com.pershot.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7C_9SJ2NXEsGugPCzwpBozzu0AOWg-nU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,86 @@
+{
+  "expo": {
+    "name": "Pershot",
+    "slug": "pershot",
+    "version": "1.0.3",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon2.png",
+    "scheme": "pershotapp",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#030712",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.pershot.app",
+      "versionCode": 4,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon2.png",
+        "backgroundColor": "#030712",
+        "monochromeImage": "./assets/images/icon2.png"
+      },
+      "backgroundColor": "#030712",
+      "predictiveBackGestureEnabled": false,
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.CAMERA"
+      ],
+      "permissions": [
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.INTERNET",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/icon2.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#030712",
+          "dark": {
+            "backgroundColor": "#030712"
+          }
+        }
+      ],
+      "expo-video",
+      "@react-native-google-signin/google-signin",
+      "expo-font",
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser",
+      "expo-audio",
+      [
+        "expo-navigation-bar",
+        {
+          "position": "absolute",
+          "backgroundColor": "#00000000"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3ab92ca9-c8b8-4b1a-b2a9-f52fb9f8d1bc"
+      }
+    }
+  }
+}
