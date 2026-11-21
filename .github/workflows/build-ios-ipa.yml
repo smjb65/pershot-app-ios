@@ -21,17 +21,15 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Select Xcode 26.2 if available, otherwise newest Xcode 26+
+      - name: Select Xcode 26+
         run: |
           ruby -e '
             apps = Dir.glob("/Applications/Xcode*.app").sort
             puts "=== Available Xcodes ==="
             puts apps
-
             xc262 = apps.find { |a| a.include?("Xcode_26.2") }
             chosen = xc262 || apps.select { |a| !a.downcase.include?("beta") && a.match(/Xcode_(2[6-9]|[3-9]\d)/) }.last
             chosen ||= apps.select { |a| a.match(/Xcode_(2[6-9]|[3-9]\d)/) }.last
-
             abort("No Xcode 26+ found on runner!") unless chosen
             puts "=== Selected Xcode: #{chosen} ==="
             File.write("/tmp/selected_xcode.txt", "#{chosen}/Contents/Developer")
@@ -42,32 +40,22 @@ jobs:
           xcodebuild -version
           swift --version
 
-      - name: Patch expo-modules-jsi for Xcode 26.3 Swift concurrency
+      - name: Patch expo-modules-jsi for Xcode 26.3
         run: |
           ruby -e '
             Dir.glob("node_modules/**/expo-modules-jsi/**/RuntimeScheduler.h").each do |f|
               c = File.read(f)
-              patched = c.gsub(/SWIFT_RETURNS_RETAINED\s+RuntimeScheduler\(/, "RuntimeScheduler(")
-              File.write(f, patched)
+              File.write(f, c.gsub(/SWIFT_RETURNS_RETAINED\s+RuntimeScheduler\(/, "RuntimeScheduler("))
               puts "Patched RuntimeScheduler.h: #{f}"
             end
 
             Dir.glob("node_modules/**/expo-modules-jsi/apple/Package.swift").each do |f|
               c = File.read(f)
+              c = c.sub(/\/\/\s*swift-tools-version:\s*\d+\.\d+(?:\.\d+)?/, "// swift-tools-version: 5.10")
               c = c.gsub(/\.swiftLanguageMode\(\.v6\)/, ".swiftLanguageMode(.v5)")
               c = c.gsub(/swiftLanguageModes:\s*\[\s*\.v6\s*\]/, "swiftLanguageModes: [.v5]")
-              unless c.include?("swiftLanguageModes")
-                c << "\npackage.swiftLanguageModes = [.v5]\n"
-              end
               File.write(f, c)
               puts "Patched Package.swift: #{f}"
-            end
-
-            Dir.glob("node_modules/**/expo-modules-jsi/apple/Sources/ExpoModulesJSI/Runtime/JavaScriptRuntime.swift").each do |f|
-              c = File.read(f)
-              c = c.gsub(/nonisolated\s*\(\s*unsafe\s*\)/, "nonisolated(unsafe)")
-              File.write(f, c)
-              puts "Checked JavaScriptRuntime.swift: #{f}"
             end
           '
 
