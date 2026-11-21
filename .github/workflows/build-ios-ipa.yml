@@ -51,11 +51,15 @@ jobs:
 
             Dir.glob("node_modules/**/expo-modules-jsi/apple/Package.swift").each do |f|
               c = File.read(f)
-              c = c.sub(/\/\/\s*swift-tools-version:\s*\d+\.\d+(?:\.\d+)?/, "// swift-tools-version: 5.10")
+              c = c.sub(/\/\/\s*swift-tools-version:\s*\d+\.\d+(?:\.\d+)?/, "// swift-tools-version: 6.0")
               c = c.gsub(/\.swiftLanguageMode\(\.v6\)/, ".swiftLanguageMode(.v5)")
               c = c.gsub(/swiftLanguageModes:\s*\[\s*\.v6\s*\]/, "swiftLanguageModes: [.v5]")
+              unless c.include?("swiftLanguageModes:")
+                c = c.sub(/(name:\s*"ExpoModulesJSI",)/, "\\1\n  swiftLanguageModes: [.v5],")
+              end
               File.write(f, c)
-              puts "Patched Package.swift: #{f}"
+              puts "=== Patched Package.swift ==="
+              puts File.read(f).lines.first(15).join
             end
           '
 
