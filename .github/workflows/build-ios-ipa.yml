@@ -9,13 +9,42 @@ jobs:
     timeout-minutes: 45
 
     steps:
+      - name: Select newest Xcode (Swift 6.2+ required for Expo SDK 57)
+        run: |
+          ruby -e '
+            apps = Dir.glob("/Applications/Xcode*.app")
+            puts "=== Available Xcodes ==="
+            puts apps
+            stable = apps.reject { |a| a.downcase.include?("beta") }
+            candidates = stable.empty? ? apps : stable
+            best = candidates.max_by do |a|
+              m = a.match(/Xcode_(\d+(?:\.\d+)*)/)
+              m ? m[1].split(".").map(&:to_i) : [0]
+            end
+            abort("No Xcode found!") unless best
+            puts "=== Selected Xcode: #{best} ==="
+            File.write("/tmp/selected_xcode.txt", "#{best}/Contents/Developer")
+          '
+          DEV_DIR=$(cat /tmp/selected_xcode.txt)
+          sudo xcode-select -s "$DEV_DIR"
+          echo "DEVELOPER_DIR=$DEV_DIR" >> "$GITHUB_ENV"
+          xcodebuild -version
+          swift --version
+
+          SWIFT_VER=$(swift --version | grep -oE 'Swift version [0-9]+\.[0-9]+' | awk '{print $3}')
+          echo "Detected Swift: $SWIFT_VER"
+          ruby -e 'exit(Gem::Version.new(ARGV[0]) >= Gem::Version.new("6.2") ? 0 : 1)' "$SWIFT_VER" || {
+            echo "❌ Swift 6.2+ is not available on this runner. Switch runs-on to macos-26."
+            exit 1
+          }
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -51,18 +80,6 @@ jobs:
         run: |
           cd ios
           pod install --repo-update
-
-      - name: Resolve Swift Package Dependencies
-        run: |
-          cd ios
-          WORKSPACE=$(ls -d *.xcworkspace | head -n 1)
-          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
-          xcodebuild \
-            -workspace "$WORKSPACE" \
-            -scheme "$SCHEME" \
-            -resolvePackageDependencies \
-            -skipPackagePluginValidation \
-            -skipMacroValidation
 
       - name: Build Unsigned Release Archive (arm64)
         env:
