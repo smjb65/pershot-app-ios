@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import {
@@ -38,6 +39,7 @@ interface ReelPlayerProps {
 }
 
 export default function ReelPlayer({ reel, isActive, isFocused, onOpenComments }: ReelPlayerProps) {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
 
   const [isUserPaused, setIsUserPaused] = useState(false);
@@ -356,7 +358,7 @@ export default function ReelPlayer({ reel, isActive, isFocused, onOpenComments }
       </Pressable>
 
       <TouchableOpacity
-        style={styles.muteBtn}
+        style={[styles.muteBtn, { top: Math.max(insets.top + 10, 54) }]}
         activeOpacity={0.7}
         onPress={() => setIsMuted(!isMuted)}
       >

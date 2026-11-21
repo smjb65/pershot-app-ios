@@ -779,7 +779,7 @@ const styles = StyleSheet.create({
   avatar: { width: 46, height: 46, borderRadius: 23, backgroundColor: '#030712' },
   userMainInfo: { flex: 1, gap: 2 },
   userNameText: { fontFamily: 'Ravi-Bold', fontSize: 13, color: '#ffffff', textAlign: 'right' },
-  userUsernameText: { fontFamily: 'monospace', fontSize: 10, color: '#64748b', textAlign: 'right' },
+  userUsernameText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 10, color: '#64748b', textAlign: 'right' },
   badgeRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6, marginTop: 4 },
   roleBadgeContainer: { borderWidth: 1, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   roleBadgeText: { fontFamily: 'Ravi-Bold', fontSize: 9 },
@@ -792,7 +792,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   contactItem: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6 },
-  contactText: { fontFamily: 'monospace', fontSize: 10, color: '#cbd5e1' },
+  contactText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 10, color: '#cbd5e1' },
   cardActionsRow: {
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.05)',
@@ -842,7 +842,7 @@ const styles = StyleSheet.create({
   disabledPageBtn: { opacity: 0.3 },
   pageBtnText: { fontFamily: 'Ravi-Bold', fontSize: 10.5, color: '#ffffff' },
   disabledPageText: { color: '#475569' },
-  pageInfoText: { fontFamily: 'monospace', fontSize: 11, color: '#94a3b8' },
+  pageInfoText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 11, color: '#94a3b8' },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.85)',
@@ -906,7 +906,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     textAlign: 'right',
   },
-  ltrInput: { textAlign: 'left', fontFamily: 'monospace' },
+  ltrInput: { textAlign: 'left', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
   bioInput: { height: 60, textAlignVertical: 'top' },
   passwordContainer: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6 },
   pwdIconBtn: {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Eye, Heart, ChevronLeft, Film, Wallet } from 'lucide-react-native';
@@ -177,10 +177,10 @@ const styles = StyleSheet.create({
   titleText: { fontFamily: 'Ravi-Bold', fontSize: 13, color: '#ffffff', flex: 1, textAlign: 'right' },
   badge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   badgeText: { fontFamily: 'Ravi-Bold', fontSize: 9 },
-  dateText: { fontFamily: 'monospace', fontSize: 9.5, color: '#64748b', textAlign: 'right' },
+  dateText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 9.5, color: '#64748b', textAlign: 'right' },
   metricsRow: { flexDirection: 'row-reverse', gap: 12 },
   metricItem: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4 },
-  metricText: { fontFamily: 'monospace', fontSize: 10.5, color: '#cbd5e1' },
+  metricText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 10.5, color: '#cbd5e1' },
   footerRow: {
     flexDirection: 'row-reverse',
     alignItems: 'center',

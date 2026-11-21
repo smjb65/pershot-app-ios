@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MessageSquare, Share2, ShieldCheck, User } from 'lucide-react-native';
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     color: '#2dd4bf',
   },
   usernameText: {
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 11,
     color: '#2dd4bf',
     marginTop: 2,

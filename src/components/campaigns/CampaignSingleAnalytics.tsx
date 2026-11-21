@@ -583,8 +583,8 @@ const styles = StyleSheet.create({
   synopsisText: { fontFamily: 'Ravi-Regular', fontSize: 10.5, color: '#cbd5e1', textAlign: 'right' },
   progressBox: { gap: 4 },
   progressRow: { flexDirection: 'row-reverse', justifyContent: 'space-between' },
-  progressPercent: { fontFamily: 'monospace', fontSize: 10, color: '#2dd4bf' },
-  progressAmount: { fontFamily: 'monospace', fontSize: 9.5, color: '#94a3b8' },
+  progressPercent: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 10, color: '#2dd4bf' },
+  progressAmount: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 9.5, color: '#94a3b8' },
   progressBar: { height: 4, backgroundColor: 'rgba(255, 255, 255, 0.06)', borderRadius: 2, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: '#14b8a6' },
 
@@ -661,7 +661,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(20, 184, 166, 0.25)',
   },
-  latestLinkLabel: { flex: 1, fontFamily: 'monospace', fontSize: 9.5, color: '#2dd4bf', textAlign: 'left', marginLeft: 8 },
+  latestLinkLabel: { flex: 1, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 9.5, color: '#2dd4bf', textAlign: 'left', marginLeft: 8 },
   shareIconBtn: {
     flexDirection: 'row-reverse',
     alignItems: 'center',

@@ -194,8 +194,8 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     textAlign: 'right',
   },
-  ltrInput: { textAlign: 'left', fontFamily: 'monospace' },
-  centerInput: { textAlign: 'center', fontFamily: 'monospace' },
+  ltrInput: { textAlign: 'left', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
+  centerInput: { textAlign: 'center', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
   textarea: { height: 80, textAlignVertical: 'top' },
   saveBtn: {
     height: 44,

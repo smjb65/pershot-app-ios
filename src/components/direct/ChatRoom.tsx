@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
   replyText: { fontFamily: 'Ravi-Regular', fontSize: 11, color: '#94a3b8' },
   closeReplyBtn: { padding: 4 },
   filePreviewBar: { flexDirection: 'row-reverse', alignItems: 'center', backgroundColor: '#0e1724', paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: 1, borderTopColor: 'rgba(255, 255, 255, 0.06)', gap: 10 },
-  filePreviewText: { fontFamily: 'monospace', fontSize: 11, color: '#2dd4bf', flex: 1, textAlign: 'right' },
+  filePreviewText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 11, color: '#2dd4bf', flex: 1, textAlign: 'right' },
   removeFileBtn: { padding: 4 },
   inputContainer: { flexDirection: 'row-reverse', alignItems: 'center', paddingHorizontal: 10, backgroundColor: '#0e1724', borderTopWidth: 1, borderTopColor: 'rgba(255, 255, 255, 0.08)', gap: 8 },
   input: { flex: 1, maxHeight: 100, minHeight: 40, backgroundColor: '#162232', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, fontFamily: 'Ravi-Regular', fontSize: 13, color: '#ffffff', textAlign: 'right' },

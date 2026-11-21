@@ -1,12 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import {
-  View,
+import { View,
   Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  FlatList,
-} from 'react-native';
+  FlatList, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import { useFocusEffect } from 'expo-router';
 import * as Notifications from 'expo-notifications';
@@ -267,7 +265,7 @@ const styles = StyleSheet.create({
   centerContent: { flex: 1, justifyContent: 'center', gap: 4 },
   topLine: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' },
   userName: { fontFamily: 'Ravi-Bold', fontSize: 14, color: '#ffffff', flex: 1, textAlign: 'right' },
-  timeText: { fontFamily: 'monospace', fontSize: 10.5, color: '#64748b', marginLeft: 6 },
+  timeText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 10.5, color: '#64748b', marginLeft: 6 },
   bottomLine: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' },
   lastMessageText: { fontFamily: 'Ravi-Regular', fontSize: 12, color: '#94a3b8', flex: 1, textAlign: 'right' },
   unreadBadge: {

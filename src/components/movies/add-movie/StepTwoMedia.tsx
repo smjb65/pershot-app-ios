@@ -1864,7 +1864,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   lockedVideoRight: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8, flex: 1 },
-  lockedVideoText: { fontFamily: 'monospace', fontSize: 10, color: '#94a3b8', flex: 1, textAlign: 'left' },
+  lockedVideoText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 10, color: '#94a3b8', flex: 1, textAlign: 'left' },
   lockedBadge: {
     fontFamily: 'Ravi-Bold',
     fontSize: 9.5,
@@ -1995,7 +1995,7 @@ const styles = StyleSheet.create({
   posterSlotHeader: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' },
   posterSlotTitleRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6 },
   posterSlotTitle: { fontFamily: 'Ravi-Bold', fontSize: 11, color: '#ffffff' },
-  posterRatioHint: { fontFamily: 'monospace', fontSize: 9.5, color: '#94a3b8' },
+  posterRatioHint: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 9.5, color: '#94a3b8' },
   verticalPosterPreviewWrap: {
     width: 150,
     height: 225,
@@ -2150,9 +2150,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   swalHighlightUrl: {
-    fontFamily: 'Ravi-Bold',
-    color: '#2dd4bf',
-    fontWeight: 'bold',
+    fontFamily: 'Ravi-Bold', color: '#2dd4bf',
   },
   chromeRecommendationBox: {
     flexDirection: 'row-reverse',

@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
   },
   usernameInput: {
     textAlign: 'left',
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
   textArea: {
     height: 80,

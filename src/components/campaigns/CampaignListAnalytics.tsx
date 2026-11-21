@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Rocket, ChevronLeft } from 'lucide-react-native';
@@ -163,13 +163,13 @@ const styles = StyleSheet.create({
   titleText: { fontFamily: 'Ravi-Bold', fontSize: 13, color: '#ffffff', flex: 1, textAlign: 'right' },
   badge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   badgeText: { fontFamily: 'Ravi-Bold', fontSize: 9 },
-  dateText: { fontFamily: 'monospace', fontSize: 9.5, color: '#64748b', textAlign: 'right' },
+  dateText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 9.5, color: '#64748b', textAlign: 'right' },
   progressContainer: { gap: 3 },
   progressBar: { height: 4, backgroundColor: 'rgba(255, 255, 255, 0.06)', borderRadius: 2, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: '#14b8a6' },
   progressMeta: { flexDirection: 'row-reverse', justifyContent: 'space-between' },
-  percentText: { fontFamily: 'monospace', fontSize: 9.5, color: '#2dd4bf' },
-  amountText: { fontFamily: 'monospace', fontSize: 9, color: '#94a3b8' },
+  percentText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 9.5, color: '#2dd4bf' },
+  amountText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 9, color: '#94a3b8' },
   footerRow: {
     flexDirection: 'row-reverse',
     alignItems: 'center',

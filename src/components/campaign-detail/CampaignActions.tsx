@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CreditCard, HeartHandshake } from 'lucide-react-native';
 import { toFarsiDigits } from '../../api/axiosClient';
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   },
   progressHeader: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' },
   progressTitle: { color: '#cbd5e1', fontFamily: 'Ravi-Bold', fontSize: 11 },
-  percentText: { color: '#2dd4bf', fontFamily: 'monospace', fontSize: 13, fontWeight: 'bold' },
+  percentText: { color: '#2dd4bf', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 13, fontWeight: 'bold' },
   progressBar: { height: 6, backgroundColor: 'rgba(255, 255, 255, 0.08)', borderRadius: 3, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: '#14b8a6' },
   numbersRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' },

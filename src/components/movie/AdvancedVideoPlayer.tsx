@@ -1384,7 +1384,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   resumeHighlight: {
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     color: '#2dd4bf',
     fontWeight: 'bold',
   },
@@ -1494,7 +1494,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(20, 184, 166, 0.2)',
   },
   timeText: {
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 11,
     color: '#cbd5e1',
     includeFontPadding: false,
@@ -1566,7 +1566,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#14b8a6',
   },
   optionText: {
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 11,
     color: '#cbd5e1',
     includeFontPadding: false,

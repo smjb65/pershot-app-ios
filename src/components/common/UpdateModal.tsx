@@ -6,8 +6,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   Linking,
+  Platform,
 } from 'react-native';
 import { Sparkles, Download, X } from 'lucide-react-native';
+import { SIBAPP_WEB_URL } from '../../utils/bazaarUtils';
 
 interface UpdateModalProps {
   visible: boolean;
@@ -17,6 +19,7 @@ interface UpdateModalProps {
   releaseNotes?: string;
   bazaarUrl?: string;
   myketUrl?: string;
+  sibappUrl?: string;
   directDownloadUrl?: string;
   onDismiss: () => void;
 }
@@ -27,11 +30,19 @@ export default function UpdateModal({
   title,
   message,
   releaseNotes,
+  sibappUrl,
   onDismiss,
 }: UpdateModalProps) {
   if (!visible) return null;
 
-  const handleUpdateFromMyket = async () => {
+  const isIos = Platform.OS === 'ios';
+
+  const handleUpdatePress = async () => {
+    if (isIos) {
+      await Linking.openURL(sibappUrl || SIBAPP_WEB_URL);
+      return;
+    }
+
     const myketIntent = 'myket://details?id=com.pershot.app';
     const myketWeb = 'https://myket.ir/app/com.pershot.app';
 
@@ -70,7 +81,10 @@ export default function UpdateModal({
 
           <Text style={styles.title}>{title || 'بروزرسانی نسخه جدید پرشات'}</Text>
           <Text style={styles.message}>
-            {message || 'نسخه جدیدی از برنامه پرشات با قابلیت‌های بهتر و رفع اشکالات در مایکت منتشر شده است.'}
+            {message ||
+              (isIos
+                ? 'نسخه جدیدی از برنامه پرشات با قابلیت‌های بهتر و رفع اشکالات در سیب‌اپ منتشر شده است.'
+                : 'نسخه جدیدی از برنامه پرشات با قابلیت‌های بهتر و رفع اشکالات در مایکت منتشر شده است.')}
           </Text>
 
           {releaseNotes ? (
@@ -83,10 +97,12 @@ export default function UpdateModal({
           <TouchableOpacity
             style={styles.myketBtn}
             activeOpacity={0.85}
-            onPress={handleUpdateFromMyket}
+            onPress={handleUpdatePress}
           >
             <Download size={18} color="#030712" />
-            <Text style={styles.myketBtnText}>بروزرسانی از مایکت</Text>
+            <Text style={styles.myketBtnText}>
+              {isIos ? 'بروزرسانی از سیب‌اپ' : 'بروزرسانی از مایکت'}
+            </Text>
           </TouchableOpacity>
 
           {!isForce && (

@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, StyleSheet, DeviceEventEmitter, Platform } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
@@ -7,6 +9,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as Notifications from 'expo-notifications';
 import * as Application from 'expo-application';
 import * as NavigationBar from 'expo-navigation-bar';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import 'react-native-reanimated';
 
@@ -15,7 +18,6 @@ import { registerForPushNotificationsAsync } from '../src/utils/notificationServ
 import { api } from '../src/api/axiosClient';
 import UpdateModal from '../src/components/common/UpdateModal';
 
-// جلوگیری از بسته شدن آنی اسپلش نیتیو
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export const unstable_settings = {
@@ -30,7 +32,6 @@ export default function RootLayout() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [splashTimerDone, setSplashTimerDone] = useState(false);
 
-  // استیت سیستم آپدیت
   const [updateInfo, setUpdateInfo] = useState<any>(null);
 
   const [fontsLoaded, fontError] = useFonts({
@@ -39,8 +40,10 @@ export default function RootLayout() {
     'Ravi-Black': require('../assets/fonts/Ravi-ExtraBlack.ttf'),
   });
 
-  // 🟢 تنظیم اجباری Edge-to-Edge و شفافیت نوار ناوبری در سراسر اپلیکیشن
   useEffect(() => {
+    // قفل پیش‌فرض روی عمودی تا فقط پلیر ویدیو به افقی بچرخد
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+
     if (Platform.OS === 'android') {
       try {
         NavigationBar.setPositionAsync('absolute').catch(() => {});
@@ -49,7 +52,6 @@ export default function RootLayout() {
     }
   }, []);
 
-  // ۱. تایمر ۱.۵ ثانیه‌ای برای دیده شدن لوگو در اسپلش نیتیو
   useEffect(() => {
     const timer = setTimeout(() => {
       setSplashTimerDone(true);
@@ -57,11 +59,10 @@ export default function RootLayout() {
     return () => clearTimeout(timer);
   }, []);
 
-  // ۲. استعلام داینامیک وضعیت نسخه از سرور
   useEffect(() => {
     const checkVersion = async () => {
       try {
-        const currentVersionCode = Number(Application.nativeBuildVersion || 1);
+        const currentVersionCode = Number(Application.nativeBuildVersion || 4);
         const res = await api.get('/chat/version-check');
         const data = res.data;
 
@@ -76,7 +77,7 @@ export default function RootLayout() {
             setUpdateInfo({ ...data, isForce: false });
           }
         }
-      } catch (e) {
+      } catch {
         console.log('Version check offline or bypassed');
       }
     };
@@ -84,7 +85,6 @@ export default function RootLayout() {
     checkVersion();
   }, []);
 
-  // ۳. بررسی توکن ورود
   const checkToken = useCallback(async () => {
     try {
       const token = await AsyncStorage.getItem('pershot_token');
@@ -103,7 +103,6 @@ export default function RootLayout() {
     checkToken();
   }, [checkToken]);
 
-  // ۴. مدیریت نوتیفیکیشن‌ها
   useEffect(() => {
     if (isAuthenticated) {
       registerForPushNotificationsAsync();
@@ -131,7 +130,6 @@ export default function RootLayout() {
 
   const isAppReady = Boolean((fontsLoaded || fontError) && isAuthChecked && splashTimerDone);
 
-  // ۵. محو کردن اسپلش نیتیو و هدایت کاربر
   useEffect(() => {
     if (isAppReady) {
       SplashScreen.hideAsync().catch(() => {});
@@ -150,44 +148,48 @@ export default function RootLayout() {
   }, [isAppReady, updateInfo, segments, router]);
 
   return (
-    <ChatProvider>
-      <View style={styles.rootContainer}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: '#030712' },
-            animation: 'fade',
-            statusBarColor: '#030712',
-          }}
-        >
-          {!isAuthenticated ? (
-            <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
-          ) : (
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          )}
-          <Stack.Screen name="(screens)/chat/[userId]" options={{ headerShown: false }} />
-          <Stack.Screen name="(screens)/campaigns/[id]" options={{ headerShown: false }} />
-          <Stack.Screen name="category/[slug]" options={{ headerShown: false }} />
-          <Stack.Screen name="movie/[id]" options={{ headerShown: false }} />
-          <Stack.Screen name="user/[id]" options={{ headerShown: false }} />
-        </Stack>
+    <GestureHandlerRootView style={styles.rootContainer}>
+      <SafeAreaProvider>
+        <ChatProvider>
+          <View style={styles.rootContainer}>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: '#030712' },
+                animation: Platform.OS === 'ios' ? 'default' : 'fade',
+                ...(Platform.OS === 'android' ? { statusBarColor: '#030712' } : {}),
+              }}
+            >
+              {!isAuthenticated ? (
+                <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
+              ) : (
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              )}
+              <Stack.Screen name="(screens)/chat/[userId]" options={{ headerShown: false }} />
+              <Stack.Screen name="(screens)/campaigns/[id]" options={{ headerShown: false }} />
+              <Stack.Screen name="category/[slug]" options={{ headerShown: false }} />
+              <Stack.Screen name="movie/[id]" options={{ headerShown: false }} />
+              <Stack.Screen name="user/[id]" options={{ headerShown: false }} />
+            </Stack>
 
-        {/* مدال سیستم آپدیت با داده‌های داینامیک */}
-        {updateInfo && (
-          <UpdateModal
-            visible={Boolean(updateInfo)}
-            isForce={Boolean(updateInfo.isForce)}
-            title={updateInfo.title}
-            message={updateInfo.message}
-            releaseNotes={updateInfo.releaseNotes}
-            bazaarUrl={updateInfo.bazaarUrl}
-            directDownloadUrl={updateInfo.directDownloadUrl}
-            onDismiss={() => setUpdateInfo(null)}
-          />
-        )}
-      </View>
-      <StatusBar style="light" backgroundColor="#030712" />
-    </ChatProvider>
+            {updateInfo && (
+              <UpdateModal
+                visible={Boolean(updateInfo)}
+                isForce={Boolean(updateInfo.isForce)}
+                title={updateInfo.title}
+                message={updateInfo.message}
+                releaseNotes={updateInfo.releaseNotes}
+                bazaarUrl={updateInfo.bazaarUrl}
+                sibappUrl={updateInfo.sibappUrl}
+                directDownloadUrl={updateInfo.directDownloadUrl}
+                onDismiss={() => setUpdateInfo(null)}
+              />
+            )}
+          </View>
+          <StatusBar style="light" backgroundColor="#030712" />
+        </ChatProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

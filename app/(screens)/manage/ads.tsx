@@ -14,6 +14,7 @@ import {
   Alert,
   Linking,
   KeyboardAvoidingView,
+  
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -36,6 +37,7 @@ import {
   Clock,
   Video,
   ImageIcon,
+  CheckCircle2
 } from 'lucide-react-native';
 import { api, getMediaUrl } from '../../../src/api/axiosClient';
 
@@ -748,7 +750,7 @@ const styles = StyleSheet.create({
   adDetails: { flex: 1, gap: 4, justifyContent: 'center' },
   adTitle: { fontFamily: 'Ravi-Bold', fontSize: 13, color: '#ffffff', textAlign: 'right' },
   targetLinkRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4 },
-  targetLinkText: { fontFamily: 'monospace', fontSize: 9.5, color: '#14b8a6', flex: 1, textAlign: 'right' },
+  targetLinkText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 9.5, color: '#14b8a6', flex: 1, textAlign: 'right' },
   timingRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8, marginTop: 2 },
   timingBadge: {
     flexDirection: 'row-reverse',
@@ -759,7 +761,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 6,
   },
-  timingText: { fontFamily: 'monospace', fontSize: 9, color: '#cbd5e1' },
+  timingText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 9, color: '#cbd5e1' },
   skipText: { fontFamily: 'Ravi-Regular', fontSize: 9, color: '#94a3b8' },
   statusBadgesRow: { flexDirection: 'row-reverse', gap: 8 },
   hlsBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
@@ -780,8 +782,8 @@ const styles = StyleSheet.create({
   },
   adStats: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10 },
   adStatItem: { flexDirection: 'row-reverse', alignItems: 'center', gap: 3 },
-  adStatText: { fontFamily: 'monospace', fontSize: 10.5, color: '#cbd5e1' },
-  adCtrText: { fontFamily: 'monospace', fontSize: 10, color: '#c084fc' },
+  adStatText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 10.5, color: '#cbd5e1' },
+  adCtrText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 10, color: '#c084fc' },
   actions: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8 },
   actionIconBtn: { padding: 4 },
   modalOverlay: {
@@ -826,8 +828,8 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     textAlign: 'right',
   },
-  ltrInput: { textAlign: 'left', fontFamily: 'monospace' },
-  centerInput: { textAlign: 'center', fontFamily: 'monospace' },
+  ltrInput: { textAlign: 'left', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
+  centerInput: { textAlign: 'center', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
   filePicker: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
@@ -872,7 +874,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   analyticsStatLabel: { fontFamily: 'Ravi-Regular', fontSize: 9.5, color: '#94a3b8' },
-  analyticsStatVal: { fontFamily: 'monospace', fontSize: 16, fontWeight: 'bold' },
+  analyticsStatVal: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 16, fontWeight: 'bold' },
   ctrHighlightBox: {
     backgroundColor: 'rgba(192, 132, 252, 0.12)',
     borderWidth: 1,
@@ -883,8 +885,8 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   ctrHighlightLabel: { fontFamily: 'Ravi-Bold', fontSize: 10.5, color: '#d8b4fe' },
-  ctrHighlightVal: { fontFamily: 'monospace', fontSize: 18, fontWeight: 'bold', color: '#ffffff' },
+  ctrHighlightVal: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 18, fontWeight: 'bold', color: '#ffffff' },
   analyticsLinks: { gap: 2, backgroundColor: 'rgba(255, 255, 255, 0.02)', padding: 10, borderRadius: 12 },
   analyticsLinkLabel: { fontFamily: 'Ravi-Bold', fontSize: 9.5, color: '#94a3b8', textAlign: 'right' },
-  analyticsLinkVal: { fontFamily: 'monospace', fontSize: 9, color: '#38bdf8', textAlign: 'left' },
+  analyticsLinkVal: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 9, color: '#38bdf8', textAlign: 'left' },
 });

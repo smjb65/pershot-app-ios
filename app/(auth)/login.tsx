@@ -81,14 +81,20 @@ export default function LoginScreen() {
   const [errorMsg, setErrorMsg] = useState('');
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
 
+  // اگر از Google Cloud Console شناسه iOS Client ID ساختید اینجا بگذارید؛ در غیر این صورت خالی بماند تا روی iOS کرش نکند
+  const IOS_GOOGLE_CLIENT_ID = '';
+  const SHOW_GOOGLE_LOGIN = Platform.OS === 'android' || Boolean(IOS_GOOGLE_CLIENT_ID);
+
   useEffect(() => {
+    if (!SHOW_GOOGLE_LOGIN) return;
     try {
       GoogleSignin.configure({
         scopes: ['email', 'profile'],
         webClientId: '237503344790-c0934o37bu1eio7afvnmlfnlpfqib4ap.apps.googleusercontent.com',
+        ...(Platform.OS === 'ios' && IOS_GOOGLE_CLIENT_ID ? { iosClientId: IOS_GOOGLE_CLIENT_ID } : {}),
         offlineAccess: false,
       });
-    } catch {}
+    } catch { }
   }, []);
 
   const videoSource = require('../../assets/videos/cinema-bg.mp4');
@@ -143,11 +149,13 @@ export default function LoginScreen() {
     try {
       setIsLoading(true);
       setErrorMsg('');
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      if (Platform.OS === 'android') {
+        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      }
 
       try {
         await GoogleSignin.signOut();
-      } catch {}
+      } catch { }
 
       const signInResult = await GoogleSignin.signIn();
       const idToken = signInResult.data?.idToken || (signInResult as any).idToken;

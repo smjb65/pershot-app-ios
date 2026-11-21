@@ -217,7 +217,8 @@ export default function MovieDetailScreen() {
       <Modal
         visible={playerState.isOpen}
         animationType="fade"
-        supportedOrientations={['landscape', 'landscape-left', 'landscape-right']}
+        presentationStyle="fullScreen"
+        supportedOrientations={['portrait', 'landscape', 'landscape-left', 'landscape-right']}
         onRequestClose={handleClosePlayer}
       >
         {playerState.isOpen && playerState.src ? (

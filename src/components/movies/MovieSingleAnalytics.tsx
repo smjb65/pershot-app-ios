@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import {
   Users,
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 6,
   },
-  timerText: { fontFamily: 'monospace', fontSize: 9.5, color: '#f43f5e' },
+  timerText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 9.5, color: '#f43f5e' },
   rejectionReason: { fontFamily: 'Ravi-Regular', fontSize: 10.5, color: '#fecdd3', textAlign: 'right' },
   movieOverviewCard: {
     flexDirection: 'row-reverse',
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   poster: { width: 65, height: 95, borderRadius: 12, backgroundColor: '#030712' },
   movieDetails: { flex: 1, justifyContent: 'center', gap: 3 },
   titleFa: { fontFamily: 'Ravi-Bold', fontSize: 13.5, color: '#ffffff', textAlign: 'right' },
-  titleEn: { fontFamily: 'monospace', fontSize: 10, color: '#64748b', textAlign: 'right' },
+  titleEn: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 10, color: '#64748b', textAlign: 'right' },
   synopsisText: { fontFamily: 'Ravi-Regular', fontSize: 10.5, color: '#cbd5e1', textAlign: 'right', lineHeight: 16 },
   statsGrid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 8 },
   statCard: {
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   heatmapBars: { flexDirection: 'row-reverse', alignItems: 'flex-end', justifyContent: 'space-between', height: 70 },
   barCol: { alignItems: 'center', gap: 4 },
   bar: { width: 14, backgroundColor: '#14b8a6', borderRadius: 4 },
-  barText: { fontFamily: 'monospace', fontSize: 8, color: '#64748b' },
+  barText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 8, color: '#64748b' },
   noHeatmapText: { fontFamily: 'Ravi-Regular', fontSize: 10.5, color: '#64748b', textAlign: 'center', paddingVertical: 16 },
   crewSection: { gap: 8 },
   sectionTitle: { fontFamily: 'Ravi-Bold', fontSize: 12, color: '#94a3b8', textAlign: 'right' },

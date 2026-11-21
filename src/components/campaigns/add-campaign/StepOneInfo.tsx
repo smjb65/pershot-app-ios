@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Platform } from 'react-native';
 import { Plus, Check, X, Globe, Calendar } from 'lucide-react-native';
 
 interface Props {
@@ -276,8 +276,8 @@ const styles = StyleSheet.create({
   },
   inputError: { borderColor: '#f43f5e' },
   errorText: { fontFamily: 'Ravi-Regular', fontSize: 10, color: '#f43f5e', textAlign: 'right' },
-  ltrInput: { textAlign: 'left', fontFamily: 'monospace' },
-  centerInput: { textAlign: 'center', fontFamily: 'monospace' },
+  ltrInput: { textAlign: 'left', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
+  centerInput: { textAlign: 'center', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
   textarea: { height: 65, textAlignVertical: 'top' },
   textareaLarge: { height: 85, textAlignVertical: 'top' },
   row: { flexDirection: 'row-reverse', gap: 8 },
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   durationBtnActive: { backgroundColor: '#14b8a6' },
-  durationBtnText: { fontFamily: 'monospace', fontSize: 10.5, color: '#cbd5e1' },
+  durationBtnText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 10.5, color: '#cbd5e1' },
   durationBtnTextActive: { fontFamily: 'Ravi-Bold', color: '#030712' },
   genresWrap: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 6, padding: 8, backgroundColor: 'rgba(255, 255, 255, 0.02)', borderRadius: 12 },
   genreBtn: {

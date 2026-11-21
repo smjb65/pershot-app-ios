@@ -909,7 +909,7 @@ const styles = StyleSheet.create({
   },
   searchMovieTitleEn: {
     color: '#64748b',
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 9.5,
     textAlign: 'left',
     includeFontPadding: false,

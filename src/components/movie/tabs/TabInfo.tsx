@@ -12,15 +12,13 @@ import {
   Video,
 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import {
-  DeviceEventEmitter,
+import { DeviceEventEmitter,
   FlatList,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
-} from 'react-native';
+  View, Platform } from 'react-native';
 import { api, getMediaUrl, toFarsiDigits } from '../../../api/axiosClient';
 
 interface TabInfoProps {
@@ -483,7 +481,7 @@ const styles = StyleSheet.create({
   reelStatText: {
     color: '#ffffff',
     fontSize: 10,
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
   crewList: {
     gap: 14,

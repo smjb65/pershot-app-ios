@@ -209,5 +209,5 @@ const styles = StyleSheet.create({
   progressContainer: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8, marginTop: 2 },
   progressBar: { flex: 1, height: 5, backgroundColor: 'rgba(255, 255, 255, 0.06)', borderRadius: 3, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: '#38bdf8', borderRadius: 3 },
-  percentText: { fontFamily: 'monospace', fontSize: 10, color: '#38bdf8' },
+  percentText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 10, color: '#38bdf8' },
 });

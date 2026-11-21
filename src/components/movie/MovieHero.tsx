@@ -1,12 +1,10 @@
 import React from 'react';
-import {
-  Share,
+import { Share,
   StyleSheet,
   Text,
   TouchableOpacity,
   useWindowDimensions,
-  View,
-} from 'react-native';
+  View, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -210,7 +208,7 @@ const styles = StyleSheet.create({
   heroTitleEn: {
     color: '#94a3b8',
     fontSize: 12,
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     marginTop: -4,
     textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.9)',

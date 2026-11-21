@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
   progressPercentText: {
     color: '#2dd4bf',
     fontSize: 12,
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: 'bold',
   },
   progressBar: {

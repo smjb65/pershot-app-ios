@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
+import { View,
   Text,
   StyleSheet,
   TouchableOpacity,
   TextInput,
   ScrollView,
   ActivityIndicator,
-  Switch,
-} from 'react-native';
+  Switch, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import {
   Trash2,
@@ -597,8 +595,8 @@ const styles = StyleSheet.create({
   },
   inputError: { borderColor: '#f43f5e' },
   errorText: { fontFamily: 'Ravi-Regular', fontSize: 10, color: '#f43f5e', textAlign: 'right' },
-  ltrInput: { textAlign: 'left', fontFamily: 'monospace' },
-  centerInput: { textAlign: 'center', fontFamily: 'monospace' },
+  ltrInput: { textAlign: 'left', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
+  centerInput: { textAlign: 'center', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
   textarea: { height: 80, textAlignVertical: 'top' },
   row: { flexDirection: 'row-reverse', gap: 8 },
   categoriesGrid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 6, marginTop: 2 },
@@ -722,7 +720,7 @@ const styles = StyleSheet.create({
   suggestUserAvatar: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#030712' },
   suggestUserMeta: { flex: 1 },
   suggestUserName: { fontFamily: 'Ravi-Bold', fontSize: 11, color: '#ffffff', textAlign: 'right' },
-  suggestUserHandle: { fontFamily: 'monospace', fontSize: 9.5, color: '#2dd4bf', textAlign: 'left' },
+  suggestUserHandle: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 9.5, color: '#2dd4bf', textAlign: 'left' },
   addedCrewList: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 6, marginTop: 4 },
   addedCrewCard: {
     flexDirection: 'row-reverse',

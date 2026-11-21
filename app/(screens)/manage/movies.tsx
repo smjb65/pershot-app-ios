@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   movieTitleEn: {
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 9.5,
     color: '#64748b',
     textAlign: 'right',
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   dateText: {
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 9.5,
     color: '#64748b',
   },
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
     color: '#475569',
   },
   pageInfoText: {
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 11,
     color: '#94a3b8',
   },

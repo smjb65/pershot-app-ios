@@ -1,14 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import {
-  View,
+import { View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
   FlatList,
   RefreshControl,
-  Alert,
-} from 'react-native';
+  Alert, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -364,7 +362,7 @@ const styles = StyleSheet.create({
     color: '#8b5cf6',
   },
   dateText: {
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 10,
     color: '#475569',
   },

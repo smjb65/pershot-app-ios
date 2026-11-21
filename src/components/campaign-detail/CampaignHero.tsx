@@ -1,12 +1,10 @@
 import React from 'react';
-import {
-  View,
+import { View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Share,
-  useWindowDimensions,
-} from 'react-native';
+  useWindowDimensions, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -178,7 +176,7 @@ const styles = StyleSheet.create({
   titleEn: {
     color: '#94a3b8',
     fontSize: 11,
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     marginTop: -4,
   },
   metaRow: {

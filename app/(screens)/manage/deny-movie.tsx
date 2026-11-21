@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
   poster: { width: 65, height: 95, borderRadius: 14, backgroundColor: '#030712' },
   details: { flex: 1, justifyContent: 'center', gap: 4 },
   movieTitle: { fontFamily: 'Ravi-Bold', fontSize: 13, color: '#ffffff', textAlign: 'right' },
-  movieTitleEn: { fontFamily: 'monospace', fontSize: 10, color: '#64748b', textAlign: 'right' },
+  movieTitleEn: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 10, color: '#64748b', textAlign: 'right' },
   rejectionReasonBox: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
@@ -661,7 +661,7 @@ const styles = StyleSheet.create({
   disabledPageBtn: { opacity: 0.3 },
   pageBtnText: { fontFamily: 'Ravi-Bold', fontSize: 10.5, color: '#ffffff' },
   disabledPageText: { color: '#475569' },
-  pageInfoText: { fontFamily: 'monospace', fontSize: 11, color: '#94a3b8' },
+  pageInfoText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 11, color: '#94a3b8' },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.85)',
@@ -710,7 +710,7 @@ const styles = StyleSheet.create({
   modalPoster: { width: 85, height: 125, borderRadius: 14, backgroundColor: '#030712' },
   modalBasicInfo: { flex: 1, gap: 4, justifyContent: 'center' },
   modalTitleFa: { fontFamily: 'Ravi-Bold', fontSize: 14, color: '#ffffff', textAlign: 'right' },
-  modalTitleEn: { fontFamily: 'monospace', fontSize: 10, color: '#64748b', textAlign: 'right' },
+  modalTitleEn: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 10, color: '#64748b', textAlign: 'right' },
   modalBadgesGrid: { gap: 4, marginTop: 4 },
   modalSpecBadge: {
     flexDirection: 'row-reverse',
@@ -754,7 +754,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 8,
   },
-  keywordTagText: { fontFamily: 'monospace', fontSize: 10, color: '#94a3b8' },
+  keywordTagText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 10, color: '#94a3b8' },
   crewList: { gap: 6 },
   crewCard: {
     flexDirection: 'row-reverse',

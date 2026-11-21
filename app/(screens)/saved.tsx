@@ -12,15 +12,13 @@ import {
     ThumbsUp,
 } from 'lucide-react-native';
 import { useCallback, useEffect, useState } from 'react';
-import {
-    ActivityIndicator,
+import { ActivityIndicator,
     Dimensions,
     FlatList,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
-} from 'react-native';
+    View, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api, getMediaUrl } from '../../src/api/axiosClient';
 
@@ -512,7 +510,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   likeText: {
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 9,
     color: '#10b981',
   },
@@ -527,7 +525,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   movieTitleEn: {
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 9.5,
     color: '#64748b',
     textAlign: 'right',
@@ -553,7 +551,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   durationText: {
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 9,
     color: '#64748b',
   },
@@ -628,7 +626,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   reelStatText: {
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 9.5,
     color: '#cbd5e1',
   },

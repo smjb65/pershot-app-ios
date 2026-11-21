@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   metricVal: {
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 10.5,
     color: '#94a3b8',
   },
