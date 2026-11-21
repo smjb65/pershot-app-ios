@@ -9,25 +9,37 @@ jobs:
     timeout-minutes: 45
 
     steps:
-      - name: Select newest Xcode (Swift 6.2+ required for Expo SDK 57)
+      - name: Select Xcode with Swift 6.2 (best match for Expo SDK 57)
         run: |
           ruby -e '
-            apps = Dir.glob("/Applications/Xcode*.app")
+            apps = Dir.glob("/Applications/Xcode*.app").sort
             puts "=== Available Xcodes ==="
-            puts apps
-            stable = apps.reject { |a| a.downcase.include?("beta") }
-            candidates = stable.empty? ? apps : stable
-            best = candidates.max_by do |a|
-              m = a.match(/Xcode_(\d+(?:\.\d+)*)/)
-              m ? m[1].split(".").map(&:to_i) : [0]
+            info = apps.map do |app|
+              swift_bin = "#{app}/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift"
+              ver_out = File.exist?(swift_bin) ? `#{swift_bin} --version 2>&1` : ""
+              m = ver_out.match(/Swift version (\d+\.\d+(?:\.\d+)?)/)
+              sver = m ? m[1] : "0.0"
+              puts "  #{app} -> Swift #{sver}"
+              { app: app, swift: sver, is_beta: app.downcase.include?("beta") }
             end
-            abort("No Xcode found!") unless best
-            puts "=== Selected Xcode: #{best} ==="
-            File.write("/tmp/selected_xcode.txt", "#{best}/Contents/Developer")
+
+            # اولویت اول: Xcode با Swift 6.2.x (کاملاً سازگار با Expo SDK 57)
+            chosen = info.select { |x| x[:swift].start_with?("6.2") && !x[:is_beta] }.last
+            chosen ||= info.select { |x| x[:swift].start_with?("6.2") }.last
+            # اولویت دوم: جدیدترین نسخه Swift >= 6.2
+            chosen ||= info.select { |x| Gem::Version.new(x[:swift]) >= Gem::Version.new("6.2") && !x[:is_beta] }.last
+            chosen ||= info.select { |x| Gem::Version.new(x[:swift]) >= Gem::Version.new("6.2") }.last
+
+            abort("No Xcode with Swift 6.2+ found!") unless chosen
+            puts "=== Selected: #{chosen[:app]} (Swift #{chosen[:swift]}) ==="
+            File.write("/tmp/selected_xcode.txt", "#{chosen[:app]}/Contents/Developer")
+            File.write("/tmp/selected_swift.txt", chosen[:swift])
           '
           DEV_DIR=$(cat /tmp/selected_xcode.txt)
+          SWIFT_VER=$(cat /tmp/selected_swift.txt)
           sudo xcode-select -s "$DEV_DIR"
           echo "DEVELOPER_DIR=$DEV_DIR" >> "$GITHUB_ENV"
+          echo "SELECTED_SWIFT_VER=$SWIFT_VER" >> "$GITHUB_ENV"
           xcodebuild -version
           swift --version
 
@@ -43,17 +55,31 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Patch expo-modules-jsi RuntimeScheduler.h for Xcode 26.3
+      - name: Patch expo-modules-jsi only if Swift >= 6.3
         run: |
           ruby -e '
-            files = Dir.glob("node_modules/**/expo-modules-jsi/**/RuntimeScheduler.h")
-            abort("RuntimeScheduler.h not found!") if files.empty?
-            files.each do |f|
-              puts "Patching #{f}"
-              c = File.read(f)
-              patched = c.gsub(/SWIFT_RETURNS_RETAINED\s+RuntimeScheduler\(/, "RuntimeScheduler(")
-              File.write(f, patched)
-              puts patched.lines.grep(/RuntimeScheduler\(/)
+            sver = ENV["SELECTED_SWIFT_VER"] || "0.0"
+            if Gem::Version.new(sver) >= Gem::Version.new("6.3")
+              puts "Swift #{sver} detected -> applying Xcode 26.3 compatibility patches..."
+
+              Dir.glob("node_modules/**/expo-modules-jsi/**/RuntimeScheduler.h").each do |f|
+                c = File.read(f)
+                File.write(f, c.gsub(/SWIFT_RETURNS_RETAINED\s+RuntimeScheduler\(/, "RuntimeScheduler("))
+                puts "Patched #{f}"
+              end
+
+              Dir.glob("node_modules/**/expo-modules-jsi/apple/Package.swift").each do |f|
+                c = File.read(f)
+                c = c.gsub(/\.swiftLanguageMode\(\.v6\)/, ".swiftLanguageMode(.v5)")
+                c = c.gsub(/swiftLanguageModes:\s*\[\s*\.v6\s*\]/, "swiftLanguageModes: [.v5]")
+                unless c.include?("swiftLanguageModes")
+                  c << "\npackage.swiftLanguageModes = [.v5]\n"
+                end
+                File.write(f, c)
+                puts "Patched #{f}"
+              end
+            else
+              puts "Swift #{sver} detected -> native Expo SDK 57 support, no patch needed."
             end
           '
 
