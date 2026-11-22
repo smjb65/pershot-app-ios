@@ -132,7 +132,7 @@ jobs:
           sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBXPROJ"
           sed -i '' 's/DEVELOPMENT_TEAM = [A-Z0-9]*;/DEVELOPMENT_TEAM = "";/g' "$PBXPROJ"
 
-          ruby -rjson -e '
+          ruby -rjson << 'RUBY_SCRIPT'
             props_file = "ios/Podfile.properties.json"
             props = File.exist?(props_file) ? JSON.parse(File.read(props_file)) : {}
             props["expo.usePrecompiledModules"] = "false"
@@ -142,7 +142,7 @@ jobs:
 
             f = "ios/Podfile"
             c = File.read(f)
-            patch = <<~RUBY
+            patch = <<~'PODFILE_PATCH'
               post_install do |installer|
                 installer.pods_project.targets.each do |target|
                   target.build_configurations.each do |config|
@@ -158,9 +158,25 @@ jobs:
                     end
                   end
                 end
-            RUBY
-            File.write(f, c.sub(/post_install do \|installer\|/, patch))
-          '
+
+                jsi_target = installer.pods_project.targets.find { |t| t.name == "ExpoModulesJSI" }
+                if jsi_target
+                  phases = jsi_target.shell_script_build_phases
+                  puts "=== ExpoModulesJSI script phases: #{phases.map(&:name).inspect} ==="
+                  build_phase = phases.find { |p| p.name.to_s.include?("Build ExpoModulesJSI") }
+                  copy_phase = phases.find { |p| p.name.to_s.include?("Copy XCFrameworks") }
+                  if build_phase && copy_phase
+                    copy_phase.shell_script = "set -e\n(\n#{build_phase.shell_script}\n)\n#{copy_phase.shell_script}"
+                    copy_phase.input_paths = []
+                    copy_phase.input_file_list_paths = []
+                    copy_phase.always_out_of_date = "1" if copy_phase.respond_to?(:always_out_of_date=)
+                    jsi_target.build_phases.delete(build_phase)
+                    puts "✅ Merged Build ExpoModulesJSI into Copy XCFrameworks (strict sequential order)"
+                  end
+                end
+            PODFILE_PATCH
+            File.write(f, c.sub(/post_install do \|installer\|/) { patch })
+          RUBY_SCRIPT
 
       - name: Install CocoaPods
         run: |
@@ -174,6 +190,9 @@ jobs:
       - name: Build Unsigned Release Archive (arm64)
         run: |
           set -o pipefail
+          echo "=== Removing any stale prebuilt ExpoModulesJSI.xcframework before archive ==="
+          find node_modules -path "*/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework" -type d -prune -exec rm -rf {} + 2>/dev/null || true
+
           cd ios
           WORKSPACE=$(ls -d *.xcworkspace | head -n 1)
           SCHEME=$(basename "$WORKSPACE" .xcworkspace)
@@ -213,7 +232,7 @@ jobs:
           check_symbols() {
             local target_jsi="$1"
             xcrun dyld_info -exports "$target_jsi" | awk '{for(i=1;i<=NF;i++) if($i ~ /^_/) {print $i; break}}' | LC_ALL=C sort -u > /tmp/jsi_exports.txt
-            echo "Exported symbols in $(basename "$target_jsi"): $(wc -l < /tmp/jsi_exports.txt)"
+            echo "Exported symbols in $target_jsi: $(wc -l < /tmp/jsi_exports.txt)"
 
             local missing_found=0
             for bin in "$APP_DIR/Pershot" "$APP_DIR"/Frameworks/*.framework/*; do
@@ -236,7 +255,22 @@ jobs:
             exit 0
           fi
 
-          echo "❌ Symbol mismatch found in embedded ExpoModulesJSI.framework."
+          echo "=== Searching all built ExpoModulesJSI.framework copies for exact ABI match ==="
+          while IFS= read -r cand_fw; do
+            cand_bin="$cand_fw/ExpoModulesJSI"
+            if [ -f "$cand_bin" ] && [ "$cand_bin" != "$JSI_BIN" ]; then
+              echo "Testing candidate: $cand_fw"
+              shasum -a 256 "$cand_bin"
+              if check_symbols "$cand_bin"; then
+                echo "✅ Found 100% matching ExpoModulesJSI.framework! Replacing embedded copy..."
+                rm -rf "$JSI_FW"
+                cp -R "$cand_fw" "$JSI_FW"
+                exit 0
+              fi
+            fi
+          done < <(find "$HOME/Library/Developer/Xcode/DerivedData" node_modules ios/Pods -name "ExpoModulesJSI.framework" -type d 2>/dev/null)
+
+          echo "❌ Symbol mismatch still present across all ExpoModulesJSI.framework copies."
           exit 1
 
       - name: Package Unsigned .ipa for SibApp
