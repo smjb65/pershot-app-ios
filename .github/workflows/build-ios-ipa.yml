@@ -40,7 +40,7 @@ jobs:
           xcodebuild -version
           swift --version
 
-      - name: Patch expo-modules-jsi (Swift 5 build with Swift 6 ABI symbols)
+      - name: Patch expo-modules-jsi for Xcode 26.3 (pure Swift 6 ABI)
         run: |
           ruby -e '
             Dir.glob("node_modules/**/expo-modules-jsi/**/RuntimeScheduler.h").each do |f|
@@ -49,39 +49,56 @@ jobs:
               puts "Patched RuntimeScheduler.h: #{f}"
             end
 
-            Dir.glob("node_modules/**/expo-modules-jsi/apple/Package.swift").each do |f|
+            Dir.glob("node_modules/**/expo-modules-jsi/apple/Sources/ExpoModulesJSI/Contexts/*.swift").each do |f|
               c = File.read(f)
-              c = c.sub(/\/\/\s*swift-tools-version:\s*\d+\.\d+(?:\.\d+)?/, "// swift-tools-version: 6.0")
-              c = c.gsub(/\.swiftLanguageMode\(\.v6\)/, ".swiftLanguageMode(.v5)")
-              c = c.gsub(/swiftLanguageModes:\s*\[\s*\.v6\s*\]/, "swiftLanguageModes: [.v5]")
-              unless c.include?("swiftLanguageModes:")
-                c = c.sub(/(name:\s*"ExpoModulesJSI",)/, "\\1\n  swiftLanguageModes: [.v5],")
+              patched = c.gsub(/(\bclass\s+\w+[^{]*?)(?<!@unchecked\s)\bSendable\b/, "\\1@unchecked Sendable")
+              if patched != c
+                File.write(f, patched)
+                puts "Patched @unchecked Sendable in: #{f}"
               end
-              File.write(f, c)
-              puts "Patched Package.swift: #{f}"
-            end
-
-            Dir.glob("node_modules/**/expo-modules-jsi/apple/Sources/ExpoModulesJSI/Runtime/JavaScriptRuntime.swift").each do |f|
-              c = File.read(f)
-              c = c.gsub("/^[a-zA-Z_$][a-zA-Z0-9_$]*$/", "#/^[a-zA-Z_$][a-zA-Z0-9_$]*$/#")
-              File.write(f, c)
-              puts "Patched regex in JavaScriptRuntime.swift: #{f}"
             end
 
             Dir.glob("node_modules/**/expo-modules-jsi/apple/Sources/ExpoModulesJSI/Runtime/Values/JavaScriptPromise.swift").each do |f|
               c = File.read(f)
-              c = c.gsub("private let longLivedState = LongLivedState()", "private let longLivedState = JavaScriptActor.assumeIsolated { LongLivedState() }")
-              File.write(f, c)
-              puts "Patched JavaScriptPromise.swift: #{f}"
-            end
-
-            Dir.glob("node_modules/**/expo-modules-jsi/apple/Sources/ExpoModulesJSI/**/*.swift").each do |f|
-              c = File.read(f)
-              patched = c.gsub(/(?<!@Sendable\s)(?<!\{\s)@JavaScriptActor(?=\s*\()/, "@Sendable @JavaScriptActor")
+              patched = c.gsub("private let longLivedState = LongLivedState()", "private let longLivedState = JavaScriptActor.assumeIsolated { LongLivedState() }")
               if patched != c
                 File.write(f, patched)
-                puts "Patched @Sendable @JavaScriptActor ABI in: #{f}"
+                puts "Patched JavaScriptPromise.swift: #{f}"
               end
+            end
+
+            Dir.glob("node_modules/**/expo-modules-jsi/apple/Sources/ExpoModulesJSI/Runtime/JavaScriptRuntime.swift").each do |f|
+              lines = File.readlines(f)
+              out = []
+              patched_count = 0
+
+              lines.each_with_index do |line, idx|
+                out << line
+                code = line.sub(%r{//.*$}, "").rstrip
+                if code.end_with?(" in") || code == "in"
+                  header_lines = [code]
+                  j = idx - 1
+                  while j >= 0 && j >= idx - 15 && !header_lines.first.include?("{")
+                    header_lines.unshift(lines[j].sub(%r{//.*$}, ""))
+                    j -= 1
+                  end
+                  header = header_lines.join(" ")
+                  if header.include?("{")
+                    after_brace = header.split("{").last
+                    ptrs = after_brace.scan(/\b([a-z][a-zA-Z0-9_]*Ptr)\b/).flatten.uniq
+                    unless ptrs.empty?
+                      indent = line[/^\s*/] + "  "
+                      ptrs.each do |p|
+                        out << "#{indent}nonisolated(unsafe) let #{p} = #{p}\n"
+                      end
+                      patched_count += 1
+                    end
+                  end
+                end
+              end
+
+              File.write(f, out.join)
+              puts "Patched #{patched_count} pointer-capturing closures in: #{f}"
             end
           '
 
@@ -138,7 +155,6 @@ jobs:
             -archivePath build/Pershot.xcarchive \
             -skipPackagePluginValidation \
             -skipMacroValidation \
-            SWIFT_STRICT_CONCURRENCY=minimal \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
@@ -173,6 +189,8 @@ jobs:
           if [ -n "$MISSING" ]; then
             echo "❌ MISSING SYMBOLS in ExpoModulesJSI:"
             echo "$MISSING"
+            echo "=== Sample exported JavaScriptValue symbols ==="
+            grep 'JavaScriptValue' /tmp/jsi_exports.txt | head -n 20 || true
             exit 1
           fi
           echo "✅ All ExpoModulesJSI symbols required by app and frameworks are present!"
