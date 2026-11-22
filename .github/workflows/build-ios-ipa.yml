@@ -40,7 +40,7 @@ jobs:
           xcodebuild -version
           swift --version
 
-      - name: Patch expo-modules-jsi for Xcode 26.3 (keep Swift 6 ABI)
+      - name: Patch expo-modules-jsi (Swift 5 build with Swift 6 ABI symbols)
         run: |
           ruby -e '
             Dir.glob("node_modules/**/expo-modules-jsi/**/RuntimeScheduler.h").each do |f|
@@ -49,36 +49,39 @@ jobs:
               puts "Patched RuntimeScheduler.h: #{f}"
             end
 
-            Dir.glob("node_modules/**/expo-modules-jsi/apple/Sources/ExpoModulesJSI/Contexts/*.swift").each do |f|
+            Dir.glob("node_modules/**/expo-modules-jsi/apple/Package.swift").each do |f|
               c = File.read(f)
-              patched = c.gsub(/(\bclass\s+\w+[^{]*?)(?<!@unchecked\s)\bSendable\b/, "\\1@unchecked Sendable")
-              if patched != c
-                File.write(f, patched)
-                puts "Patched @unchecked Sendable in: #{f}"
+              c = c.sub(/\/\/\s*swift-tools-version:\s*\d+\.\d+(?:\.\d+)?/, "// swift-tools-version: 6.0")
+              c = c.gsub(/\.swiftLanguageMode\(\.v6\)/, ".swiftLanguageMode(.v5)")
+              c = c.gsub(/swiftLanguageModes:\s*\[\s*\.v6\s*\]/, "swiftLanguageModes: [.v5]")
+              unless c.include?("swiftLanguageModes:")
+                c = c.sub(/(name:\s*"ExpoModulesJSI",)/, "\\1\n  swiftLanguageModes: [.v5],")
               end
+              File.write(f, c)
+              puts "Patched Package.swift: #{f}"
+            end
+
+            Dir.glob("node_modules/**/expo-modules-jsi/apple/Sources/ExpoModulesJSI/Runtime/JavaScriptRuntime.swift").each do |f|
+              c = File.read(f)
+              c = c.gsub("/^[a-zA-Z_$][a-zA-Z0-9_$]*$/", "#/^[a-zA-Z_$][a-zA-Z0-9_$]*$/#")
+              File.write(f, c)
+              puts "Patched regex in JavaScriptRuntime.swift: #{f}"
             end
 
             Dir.glob("node_modules/**/expo-modules-jsi/apple/Sources/ExpoModulesJSI/Runtime/Values/JavaScriptPromise.swift").each do |f|
               c = File.read(f)
-              patched = c.gsub("private let longLivedState = LongLivedState()", "private let longLivedState = JavaScriptActor.assumeIsolated { LongLivedState() }")
-              if patched != c
-                File.write(f, patched)
-                puts "Patched JavaScriptPromise.swift: #{f}"
-              end
+              c = c.gsub("private let longLivedState = LongLivedState()", "private let longLivedState = JavaScriptActor.assumeIsolated { LongLivedState() }")
+              File.write(f, c)
+              puts "Patched JavaScriptPromise.swift: #{f}"
             end
 
-            Dir.glob("node_modules/**/expo-modules-jsi/apple/Sources/ExpoModulesJSI").each do |dir|
-              compat_file = File.join(dir, "Swift63Compat.swift")
-              File.write(compat_file, <<~SWIFT)
-                extension UnsafePointer: @retroactive @unchecked Sendable {}
-                extension UnsafeMutablePointer: @retroactive @unchecked Sendable {}
-                extension UnsafeRawPointer: @retroactive @unchecked Sendable {}
-                extension UnsafeMutableRawPointer: @retroactive @unchecked Sendable {}
-                extension UnsafeBufferPointer: @retroactive @unchecked Sendable {}
-                extension UnsafeMutableBufferPointer: @retroactive @unchecked Sendable {}
-                extension OpaquePointer: @retroactive @unchecked Sendable {}
-              SWIFT
-              puts "Created Swift63Compat.swift in: #{compat_file}"
+            Dir.glob("node_modules/**/expo-modules-jsi/apple/Sources/ExpoModulesJSI/**/*.swift").each do |f|
+              c = File.read(f)
+              patched = c.gsub(/(?<!@Sendable\s)(?<!\{\s)@JavaScriptActor(?=\s*\()/, "@Sendable @JavaScriptActor")
+              if patched != c
+                File.write(f, patched)
+                puts "Patched @Sendable @JavaScriptActor ABI in: #{f}"
+              end
             end
           '
 
@@ -135,6 +138,7 @@ jobs:
             -archivePath build/Pershot.xcarchive \
             -skipPackagePluginValidation \
             -skipMacroValidation \
+            SWIFT_STRICT_CONCURRENCY=minimal \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
@@ -150,22 +154,28 @@ jobs:
         run: |
           APP_DIR=$(find ios/build/Pershot.xcarchive/Products/Applications -maxdepth 1 -name "*.app" | head -n 1)
           JSI_BIN="$APP_DIR/Frameworks/ExpoModulesJSI.framework/ExpoModulesJSI"
-          CORE_BIN="$APP_DIR/Frameworks/ExpoModulesCore.framework/ExpoModulesCore"
 
-          echo "=== Checking symbols between ExpoModulesCore and ExpoModulesJSI ==="
+          echo "=== Checking all app & framework imports against ExpoModulesJSI ==="
           nm -gU "$JSI_BIN" | awk '{print $NF}' | LC_ALL=C sort -u > /tmp/jsi_exports.txt
-          (nm -u "$CORE_BIN" | grep '14ExpoModulesJSI' || true) | awk '{print $NF}' | LC_ALL=C sort -u > /tmp/core_imports.txt
 
-          echo "Exported runIsolated symbols in ExpoModulesJSI:"
-          grep 'runIsolated' /tmp/jsi_exports.txt || true
+          : > /tmp/all_jsi_imports.txt
+          for bin in "$APP_DIR/Pershot" "$APP_DIR"/Frameworks/*.framework/*; do
+            if [ -f "$bin" ] && [ "$bin" != "$JSI_BIN" ] && file "$bin" | grep -q "Mach-O"; then
+              (nm -u "$bin" | grep '14ExpoModulesJSI' || true) | awk '{print $NF}' >> /tmp/all_jsi_imports.txt
+            fi
+          done
+          LC_ALL=C sort -u /tmp/all_jsi_imports.txt -o /tmp/all_jsi_imports.txt
 
-          MISSING=$(comm -23 /tmp/core_imports.txt /tmp/jsi_exports.txt)
+          echo "Checking required runIsolated symbol:"
+          grep '14ExpoModulesJSI15JavaScriptActorC11runIsolated' /tmp/jsi_exports.txt || true
+
+          MISSING=$(comm -23 /tmp/all_jsi_imports.txt /tmp/jsi_exports.txt)
           if [ -n "$MISSING" ]; then
-            echo "❌ MISSING SYMBOLS in ExpoModulesJSI required by ExpoModulesCore:"
+            echo "❌ MISSING SYMBOLS in ExpoModulesJSI:"
             echo "$MISSING"
             exit 1
           fi
-          echo "✅ All ExpoModulesJSI symbols required by ExpoModulesCore are present!"
+          echo "✅ All ExpoModulesJSI symbols required by app and frameworks are present!"
 
       - name: Package Unsigned .ipa for SibApp
         run: |
