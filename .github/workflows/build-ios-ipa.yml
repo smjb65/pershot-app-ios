@@ -221,57 +221,59 @@ jobs:
       - name: Verify ExpoModulesJSI symbols (prevent DYLD crash)
         run: |
           APP_DIR=$(find ios/build/Pershot.xcarchive/Products/Applications -maxdepth 1 -name "*.app" | head -n 1)
-          JSI_FW="$APP_DIR/Frameworks/ExpoModulesJSI.framework"
-          JSI_BIN="$JSI_FW/ExpoModulesJSI"
+          JSI_BIN="$APP_DIR/Frameworks/ExpoModulesJSI.framework/ExpoModulesJSI"
 
           if [ ! -f "$JSI_BIN" ]; then
             echo "ℹ️ ExpoModulesJSI is statically linked (no dynamic framework to mismatch)."
             exit 0
           fi
 
-          check_symbols() {
-            local target_jsi="$1"
-            xcrun dyld_info -exports "$target_jsi" | awk '{for(i=1;i<=NF;i++) if($i ~ /^_/) {print $i; break}}' | LC_ALL=C sort -u > /tmp/jsi_exports.txt
-            echo "Exported symbols in $target_jsi: $(wc -l < /tmp/jsi_exports.txt)"
+          APP_DIR="$APP_DIR" JSI_BIN="$JSI_BIN" python3 - << 'PY'
+          import os, re, subprocess, sys
 
-            local missing_found=0
-            for bin in "$APP_DIR/Pershot" "$APP_DIR"/Frameworks/*.framework/*; do
-              if [ -f "$bin" ] && [ "$bin" != "$JSI_BIN" ] && file "$bin" | grep -q "Mach-O"; then
-                (xcrun dyld_info -imports "$bin" | grep 'ExpoModulesJSI' || true) | awk '{for(i=1;i<=NF;i++) if($i ~ /^_/) {print $i; break}}' | LC_ALL=C sort -u > /tmp/bin_imports.txt
-                MISSING=$(comm -23 /tmp/bin_imports.txt /tmp/jsi_exports.txt)
-                if [ -n "$MISSING" ]; then
-                  echo "❌ MISSING SYMBOLS required by $(basename "$bin"):"
-                  echo "$MISSING"
-                  missing_found=1
-                fi
-              fi
-            done
-            return $missing_found
-          }
+          app_dir = os.environ["APP_DIR"]
+          jsi_bin = os.environ["JSI_BIN"]
 
-          echo "=== Checking embedded ExpoModulesJSI.framework with dyld_info ==="
-          if check_symbols "$JSI_BIN"; then
-            echo "✅ All ExpoModulesJSI runtime imports are exported by embedded ExpoModulesJSI.framework!"
-            exit 0
-          fi
+          def run(cmd):
+              return subprocess.check_output(cmd, text=True, errors="replace")
 
-          echo "=== Searching all built ExpoModulesJSI.framework copies for exact ABI match ==="
-          while IFS= read -r cand_fw; do
-            cand_bin="$cand_fw/ExpoModulesJSI"
-            if [ -f "$cand_bin" ] && [ "$cand_bin" != "$JSI_BIN" ]; then
-              echo "Testing candidate: $cand_fw"
-              shasum -a 256 "$cand_bin"
-              if check_symbols "$cand_bin"; then
-                echo "✅ Found 100% matching ExpoModulesJSI.framework! Replacing embedded copy..."
-                rm -rf "$JSI_FW"
-                cp -R "$cand_fw" "$JSI_FW"
-                exit 0
-              fi
-            fi
-          done < <(find "$HOME/Library/Developer/Xcode/DerivedData" node_modules ios/Pods -name "ExpoModulesJSI.framework" -type d 2>/dev/null)
+          exports_out = run(["xcrun", "dyld_info", "-exports", jsi_bin])
+          exports = set(re.findall(r"(?<!\S)(_[A-Za-z0-9_$]+)", exports_out))
+          print(f"Exported symbols in ExpoModulesJSI: {len(exports)}")
 
-          echo "❌ Symbol mismatch still present across all ExpoModulesJSI.framework copies."
-          exit 1
+          targets = [os.path.join(app_dir, "Pershot")]
+          fw_root = os.path.join(app_dir, "Frameworks")
+          if os.path.isdir(fw_root):
+              for fw in sorted(os.listdir(fw_root)):
+                  if fw.endswith(".framework"):
+                      name = fw[:-len(".framework")]
+                      p = os.path.join(fw_root, fw, name)
+                      if os.path.isfile(p) and os.path.realpath(p) != os.path.realpath(jsi_bin):
+                          targets.append(p)
+
+          missing_any = False
+          for t in targets:
+              if not os.path.isfile(t):
+                  continue
+              imp_out = run(["xcrun", "dyld_info", "-imports", t])
+              imports = set()
+              for line in imp_out.splitlines():
+                  if "ExpoModulesJSI" in line:
+                      m = re.findall(r"(?<!\S)(_[A-Za-z0-9_$]+)", line)
+                      if m:
+                          imports.add(m[-1])
+              missing = sorted(imports - exports)
+              print(f"Checked {os.path.basename(t)}: {len(imports)} ExpoModulesJSI imports, {len(missing)} missing")
+              if missing:
+                  missing_any = True
+                  print(f"❌ MISSING SYMBOLS required by {os.path.basename(t)}:")
+                  for s in missing:
+                      print("  ", s)
+
+          if missing_any:
+              sys.exit(1)
+          print("✅ 100% of ExpoModulesJSI runtime imports are exported by ExpoModulesJSI.framework!")
+          PY
 
       - name: Package Unsigned .ipa for SibApp
         run: |
