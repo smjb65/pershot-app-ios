@@ -212,13 +212,13 @@ jobs:
 
           check_symbols() {
             local target_jsi="$1"
-            xcrun dyld_info -exports "$target_jsi" | grep -oE '(^|[[:space:]])_[A-Za-z0-9_$]+' | tr -d '[:space:]' | LC_ALL=C sort -u > /tmp/jsi_exports.txt
+            xcrun dyld_info -exports "$target_jsi" | awk '{for(i=1;i<=NF;i++) if($i ~ /^_/) {print $i; break}}' | LC_ALL=C sort -u > /tmp/jsi_exports.txt
             echo "Exported symbols in $(basename "$target_jsi"): $(wc -l < /tmp/jsi_exports.txt)"
 
             local missing_found=0
             for bin in "$APP_DIR/Pershot" "$APP_DIR"/Frameworks/*.framework/*; do
               if [ -f "$bin" ] && [ "$bin" != "$JSI_BIN" ] && file "$bin" | grep -q "Mach-O"; then
-                (xcrun dyld_info -imports "$bin" | grep 'ExpoModulesJSI' || true) | grep -oE '(^|[[:space:]])_[A-Za-z0-9_$]+' | tr -d '[:space:]' | LC_ALL=C sort -u > /tmp/bin_imports.txt
+                (xcrun dyld_info -imports "$bin" | grep 'ExpoModulesJSI' || true) | awk '{for(i=1;i<=NF;i++) if($i ~ /^_/) {print $i; break}}' | LC_ALL=C sort -u > /tmp/bin_imports.txt
                 MISSING=$(comm -23 /tmp/bin_imports.txt /tmp/jsi_exports.txt)
                 if [ -n "$MISSING" ]; then
                   echo "❌ MISSING SYMBOLS required by $(basename "$bin"):"
@@ -236,20 +236,7 @@ jobs:
             exit 0
           fi
 
-          echo "=== Embedded framework had missing symbols; checking source-built Products/ExpoModulesJSI.xcframework ==="
-          ALT_FW=$(find node_modules -path "*/expo-modules-jsi/apple/Products/ExpoModulesJSI.xcframework/ios-arm64/ExpoModulesJSI.framework" -type d | head -n 1)
-          if [ -n "$ALT_FW" ] && [ -f "$ALT_FW/ExpoModulesJSI" ]; then
-            echo "Found source-built framework: $ALT_FW"
-            shasum -a 256 "$JSI_BIN" "$ALT_FW/ExpoModulesJSI"
-            if check_symbols "$ALT_FW/ExpoModulesJSI"; then
-              echo "✅ Source-built framework has ALL required symbols! Replacing embedded copy..."
-              rm -rf "$JSI_FW"
-              cp -R "$ALT_FW" "$JSI_FW"
-              exit 0
-            fi
-          fi
-
-          echo "❌ Symbol mismatch still present after checking all ExpoModulesJSI.framework copies."
+          echo "❌ Symbol mismatch found in embedded ExpoModulesJSI.framework."
           exit 1
 
       - name: Package Unsigned .ipa for SibApp
