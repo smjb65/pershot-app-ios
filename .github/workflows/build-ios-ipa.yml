@@ -8,6 +8,12 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 45
 
+    env:
+      CI: '1'
+      EXPO_NO_TELEMETRY: '1'
+      EXPO_BUILD_FROM_SOURCE: '1'
+      EXPO_USE_PRECOMPILED_MODULES: '0'
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -104,7 +110,6 @@ jobs:
                       out << "#{indent}nonisolated(unsafe) let #{p} = #{p}\n"
                     end
                     patched_count += 1
-                    puts "Injected nonisolated(unsafe) for [#{ptrs.join(", ")}] before line #{idx + 1}: #{line.strip}"
                   end
                 end
                 out << line
@@ -118,7 +123,7 @@ jobs:
       - name: Expo Prebuild (iOS)
         run: npx expo prebuild --platform ios --clean --no-install
 
-      - name: Configure Node binary and disable code signing
+      - name: Configure Node binary, build from source, and disable code signing
         run: |
           echo "export NODE_BINARY=$(command -v node)" > ios/.xcode.env.local
 
@@ -127,7 +132,14 @@ jobs:
           sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBXPROJ"
           sed -i '' 's/DEVELOPMENT_TEAM = [A-Z0-9]*;/DEVELOPMENT_TEAM = "";/g' "$PBXPROJ"
 
-          ruby -e '
+          ruby -rjson -e '
+            props_file = "ios/Podfile.properties.json"
+            props = File.exist?(props_file) ? JSON.parse(File.read(props_file)) : {}
+            props["expo.usePrecompiledModules"] = "false"
+            props["ios.buildFromSource"] = "true"
+            File.write(props_file, JSON.pretty_generate(props))
+            puts "Updated Podfile.properties.json: #{props.inspect}"
+
             f = "ios/Podfile"
             c = File.read(f)
             patch = <<~RUBY
@@ -153,9 +165,6 @@ jobs:
           done
 
       - name: Build Unsigned Release Archive (arm64)
-        env:
-          CI: '1'
-          EXPO_NO_TELEMETRY: '1'
         run: |
           set -o pipefail
           cd ios
@@ -191,21 +200,22 @@ jobs:
           echo "=== Checking all app & framework imports against ExpoModulesJSI ==="
           nm -gU "$JSI_BIN" | awk '{print $NF}' | LC_ALL=C sort -u > /tmp/jsi_exports.txt
 
-          : > /tmp/all_jsi_imports.txt
+          MISSING_FOUND=0
           for bin in "$APP_DIR/Pershot" "$APP_DIR"/Frameworks/*.framework/*; do
             if [ -f "$bin" ] && [ "$bin" != "$JSI_BIN" ] && file "$bin" | grep -q "Mach-O"; then
-              (nm -u "$bin" | grep '14ExpoModulesJSI' || true) | awk '{print $NF}' >> /tmp/all_jsi_imports.txt
+              (nm -u "$bin" | grep '14ExpoModulesJSI' || true) | awk '{print $NF}' | LC_ALL=C sort -u > /tmp/bin_imports.txt
+              MISSING=$(comm -23 /tmp/bin_imports.txt /tmp/jsi_exports.txt)
+              if [ -n "$MISSING" ]; then
+                echo "❌ MISSING SYMBOLS required by $(basename "$bin"):"
+                echo "$MISSING"
+                MISSING_FOUND=1
+              fi
             fi
           done
-          LC_ALL=C sort -u /tmp/all_jsi_imports.txt -o /tmp/all_jsi_imports.txt
 
-          echo "Checking required runIsolated symbol:"
-          grep '14ExpoModulesJSI15JavaScriptActorC11runIsolated' /tmp/jsi_exports.txt || true
-
-          MISSING=$(comm -23 /tmp/all_jsi_imports.txt /tmp/jsi_exports.txt)
-          if [ -n "$MISSING" ]; then
-            echo "❌ MISSING SYMBOLS in ExpoModulesJSI:"
-            echo "$MISSING"
+          if [ "$MISSING_FOUND" -ne 0 ]; then
+            echo "=== Sample JavaScriptValue symbols exported by ExpoModulesJSI ==="
+            grep 'JavaScriptValue' /tmp/jsi_exports.txt | head -n 20 || true
             exit 1
           fi
           echo "✅ All ExpoModulesJSI symbols required by app and frameworks are present!"
