@@ -66,6 +66,20 @@ jobs:
                 puts "Patched JavaScriptPromise.swift: #{f}"
               end
             end
+
+            Dir.glob("node_modules/**/expo-modules-jsi/apple/Sources/ExpoModulesJSI").each do |dir|
+              compat_file = File.join(dir, "Swift63Compat.swift")
+              File.write(compat_file, <<~SWIFT)
+                extension UnsafePointer: @retroactive @unchecked Sendable {}
+                extension UnsafeMutablePointer: @retroactive @unchecked Sendable {}
+                extension UnsafeRawPointer: @retroactive @unchecked Sendable {}
+                extension UnsafeMutableRawPointer: @retroactive @unchecked Sendable {}
+                extension UnsafeBufferPointer: @retroactive @unchecked Sendable {}
+                extension UnsafeMutableBufferPointer: @retroactive @unchecked Sendable {}
+                extension OpaquePointer: @retroactive @unchecked Sendable {}
+              SWIFT
+              puts "Created Swift63Compat.swift in: #{compat_file}"
+            end
           '
 
       - name: Expo Prebuild (iOS)
