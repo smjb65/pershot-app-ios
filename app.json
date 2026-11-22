@@ -2,7 +2,7 @@
   "expo": {
     "name": "Pershot",
     "slug": "pershot",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon2.png",
     "scheme": "pershotapp",
@@ -10,7 +10,6 @@
     "backgroundColor": "#030712",
     "ios": {
       "bundleIdentifier": "com.pershot.app",
-      "buildNumber": "4",
       "supportsTablet": true,
       "backgroundColor": "#030712",
       "infoPlist": {
@@ -25,7 +24,8 @@
           "UIInterfaceOrientationLandscapeLeft",
           "UIInterfaceOrientationLandscapeRight"
         ]
-      }
+      },
+      "buildNumber": "5"
     },
     "android": {
       "package": "com.pershot.app",

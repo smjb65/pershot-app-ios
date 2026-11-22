@@ -280,11 +280,11 @@ jobs:
           cd ios/build
           mkdir -p Payload
           cp -R Pershot.xcarchive/Products/Applications/*.app Payload/
-          zip -qry Pershot-SibApp-1.0.3.ipa Payload
-          ls -lh Pershot-SibApp-1.0.3.ipa
+          zip -qry Pershot-SibApp-1.0.4.ipa Payload
+          ls -lh Pershot-SibApp-1.0.4.ipa
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Pershot-SibApp-IPA
-          path: ios/build/Pershot-SibApp-1.0.3.ipa
+          path: ios/build/Pershot-SibApp-1.0.4.ipa
