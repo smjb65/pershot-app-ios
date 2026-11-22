@@ -73,32 +73,45 @@ jobs:
               patched_count = 0
 
               lines.each_with_index do |line, idx|
-                out << line
-                code = line.sub(%r{//.*$}, "").rstrip
-                if code.end_with?(" in") || code == "in"
-                  header_lines = [code]
-                  j = idx - 1
-                  while j >= 0 && j >= idx - 15 && !header_lines.first.include?("{")
-                    header_lines.unshift(lines[j].sub(%r{//.*$}, ""))
-                    j -= 1
-                  end
-                  header = header_lines.join(" ")
-                  if header.include?("{")
-                    after_brace = header.split("{").last
-                    ptrs = after_brace.scan(/\b([a-z][a-zA-Z0-9_]*Ptr)\b/).flatten.uniq
-                    unless ptrs.empty?
-                      indent = line[/^\s*/] + "  "
-                      ptrs.each do |p|
-                        out << "#{indent}nonisolated(unsafe) let #{p} = #{p}\n"
+                if line.include?("JavaScriptActor.assumeIsolated") || line.include?("JavaScriptActor.runIsolated")
+                  depth = 0
+                  started = false
+                  body_lines = []
+                  k = idx
+                  while k < lines.length
+                    l = lines[k]
+                    body_lines << l
+                    l.each_char do |ch|
+                      if ch == "{"
+                        depth += 1
+                        started = true
+                      elsif ch == "}"
+                        depth -= 1
                       end
-                      patched_count += 1
                     end
+                    break if started && depth <= 0
+                    k += 1
+                  end
+
+                  body = body_lines.join
+                  ptrs = body.scan(/\b([a-z][a-zA-Z0-9_]*Ptr)\b/).flatten.uniq
+                  declared = body.scan(/\b(?:let|var)\s+([a-z][a-zA-Z0-9_]*Ptr)\b/).flatten.uniq
+                  ptrs -= declared
+
+                  unless ptrs.empty?
+                    indent = line[/^\s*/]
+                    ptrs.each do |p|
+                      out << "#{indent}nonisolated(unsafe) let #{p} = #{p}\n"
+                    end
+                    patched_count += 1
+                    puts "Injected nonisolated(unsafe) for [#{ptrs.join(", ")}] before line #{idx + 1}: #{line.strip}"
                   end
                 end
+                out << line
               end
 
               File.write(f, out.join)
-              puts "Patched #{patched_count} pointer-capturing closures in: #{f}"
+              puts "Total patched JavaScriptActor blocks in #{f}: #{patched_count}"
             end
           '
 
@@ -133,7 +146,11 @@ jobs:
       - name: Install CocoaPods
         run: |
           cd ios
-          pod install --repo-update
+          for i in 1 2 3; do
+            pod install --repo-update && break
+            echo "pod install failed (attempt $i), retrying in 10s..."
+            sleep 10
+          done
 
       - name: Build Unsigned Release Archive (arm64)
         env:
@@ -189,8 +206,6 @@ jobs:
           if [ -n "$MISSING" ]; then
             echo "❌ MISSING SYMBOLS in ExpoModulesJSI:"
             echo "$MISSING"
-            echo "=== Sample exported JavaScriptValue symbols ==="
-            grep 'JavaScriptValue' /tmp/jsi_exports.txt | head -n 20 || true
             exit 1
           fi
           echo "✅ All ExpoModulesJSI symbols required by app and frameworks are present!"
